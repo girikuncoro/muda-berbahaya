@@ -74,6 +74,7 @@
       </select>
     </div>
 
+<<<<<<< HEAD
 <!--     <div class="col-md-4">
       <label for="select-problem" class="sr-only">Problems</label>
       <select id="select-problem" placeholder="Select type of problem...">
@@ -87,6 +88,8 @@
         <option value="">Select type of fear...</option>
       </select>
     </div> -->
+=======
+>>>>>>> gh-pages
   </div>
 
   <div class="map"></div>
@@ -96,7 +99,10 @@
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<<<<<<< HEAD
 <!-- Latest compiled and minified JavaScript -->
+=======
+>>>>>>> gh-pages
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <script src="http://d3js.org/queue.v1.min.js"></script>
@@ -138,7 +144,12 @@ var selectedProvince = null;
 var tempcolor,
     tempdata;
 
+<<<<<<< HEAD
 var idnData,
+=======
+var sumProv,
+    idnData,
+>>>>>>> gh-pages
     provData = {};
 
 // var selectize;
@@ -149,8 +160,11 @@ function init(error, muda, idn) {
     .map(muda);
 
   _.each(provinces, function(province, keys) {
+<<<<<<< HEAD
     // Rename province defined in TopoJSON
     // keys = renameProvince(keys);
+=======
+>>>>>>> gh-pages
 
     var optimistic = _.countBy(province, function(p) {
       return p.optimistic;
@@ -199,7 +213,11 @@ function init(error, muda, idn) {
     provData[keys].opstat['Total'] = total;
   });
 
+<<<<<<< HEAD
   var sum = sumProvince(provData);
+=======
+  sumProv = sumProvince(provData);
+>>>>>>> gh-pages
 
   var maps = topojson.feature(idn, idn.objects.provinces).features;
 
@@ -213,9 +231,13 @@ function init(error, muda, idn) {
 
   drawMap(maps, 'optimistic');
 
+<<<<<<< HEAD
   populateSelection(sum);
 
   console.log(sum);
+=======
+  populateSelection(sumProv);
+>>>>>>> gh-pages
 }
 
 function drawMap(data, param) {
@@ -230,16 +252,28 @@ function drawMap(data, param) {
     .enter().append("path")
     .attr("d", path)
     .attr("id", function(d) { return d.stat.name.replace(/ /g,'').toLowerCase(); })
+<<<<<<< HEAD
+=======
+    .attr("class", "provinces")
+>>>>>>> gh-pages
     .style("fill", function(d) { return colors(d.stat[param]); })
     .style("stroke", "#fff")
     .style("stroke-width", .5)
     .on("mouseover", function(d){
       d3.select(this).style("fill", "#e6550d");
+<<<<<<< HEAD
       showPopover.call(this,d);
       makeBarchart(d.stat);
     })
     .on("mouseout", function(d){
       d3.select(this).style("fill", function(d) { return $(this).attr("id") == selectedProvince ? "#e6550d" : colors(d.stat[param]); });
+=======
+      if(selectedProvince == null) showPopover.call(this,d);
+      makeBarchart(d.stat);
+    })
+    .on("mouseout", function(d){
+      d3.select(this).style("fill", function(d) { return $(this).attr("id") == selectedProvince || selectedProvince == 'all' ? "#e6550d" : colors(d.stat[param]); });
+>>>>>>> gh-pages
       removePopover();
     })
     .on("click", function(d) { 
@@ -284,6 +318,16 @@ function drawMap(data, param) {
     .style("fill", "#bdbdbd");
 }
 
+<<<<<<< HEAD
+=======
+function paintMap(data) {
+  _.each(data, function(v,k) {
+    var id = k.replace(/ /g,'').toLowerCase(); 
+    d3.select("#"+id).style("fill", colors(v.optimistic));
+  })
+}
+
+>>>>>>> gh-pages
 function showDetails(data, position) {  
   console.log(position);
 
@@ -434,7 +478,11 @@ function populateDetails(data) {
   var detail = 
   "<div class='page-header'>" +
     "<h3 class='text-center'>" + data.name + "</h3>" +
+<<<<<<< HEAD
     "<p class='text-center reduce-space'><b>" + data.opstat["Yes"] + "</b> of <b>" + data.opstat["Total"] + "</b> youth optimistic in Indonesia's future</p>" +
+=======
+    "<p class='text-center reduce-space' style='font-size:13px'>Here, <b>" + data.opstat["Yes"] + "</b> of <b>" + data.opstat["Total"] + "</b> youths are optimistic<br> on Indonesia's future, are you?</p>" +
+>>>>>>> gh-pages
   "</div>" +
     
   "<div style='padding-right:10px'><h4 class='text-left'>What are the biggest problems in Indonesia that you want to solve on?</h4>" +  
@@ -588,11 +636,17 @@ function drawDetailPieLeft(data) {
 }
 
 function drawDetailBar(data, classname) {
+<<<<<<< HEAD
   // console.log(data);
 
   data = _.sortBy(data, 'value').reverse();
 
   var w = width/4.3,
+=======
+  data = _.sortBy(data, 'value').reverse();
+
+  var w = width/5,
+>>>>>>> gh-pages
       m = { left: 90, right: 30 },
       barH = 20,
       offset = 10;
@@ -630,14 +684,22 @@ function drawDetailBar(data, classname) {
     });
 
   bar.append("text")
+<<<<<<< HEAD
     .attr("x", function(d) { return x(d.value) < 7 ? x(d.value) + 10 : x(d.value); }) 
+=======
+    .attr("x", function(d) { return x(d.value) < 10 ? x(d.value) + 15 : x(d.value); }) 
+>>>>>>> gh-pages
     .attr("dx", "-.2em")   
     .attr("y", barH/2)
     .attr("dy", ".25em")
     .style("text-anchor", "end")
     .style("font-size", "10px")
     .text(function(d) { return d.value; })
+<<<<<<< HEAD
     .style("fill", function(d) { return x(d.value) < 7 ? "#000" : "#FFF"; } );
+=======
+    .style("fill", function(d) { return x(d.value) < 10 ? "#000" : "#FFF"; } );
+>>>>>>> gh-pages
 }
 
 function showPopover(data) {
@@ -649,6 +711,7 @@ function showPopover(data) {
     title: province,
     placement: 'auto right',
     container: 'body',
+<<<<<<< HEAD
     html: true,
     // content: function() {
     //   // var pop = "<div><p class='reduce-space'><b>Optimist:</b> " + data.stat.optimistic.toFixed(0) + " %</p>"
@@ -658,6 +721,9 @@ function showPopover(data) {
 
     //   return pop;
     // }
+=======
+    html: true
+>>>>>>> gh-pages
   });
 
   $(selection).popover('show');
@@ -716,7 +782,14 @@ function makeBarchart(data) {
 
 function sumProvince(data) {
   var problems = {},
+<<<<<<< HEAD
       fears = {};
+=======
+      fears = {},
+      opstat = {},
+      eastdev = {},
+      duration = {};
+>>>>>>> gh-pages
 
   _.each(data, function(d) {
     _.each(d.problem, function(v,k) {
@@ -726,15 +799,39 @@ function sumProvince(data) {
     _.each(d.fear, function(v,k) {
       fears[k] = fears[k] + v || v;
     })
+<<<<<<< HEAD
   });
 
   return {'problems':problems, 'fears':fears, 'provinces':_.allKeys(data)};
+=======
+
+    _.each(d.opstat, function(v,k) {
+      opstat[k] = opstat[k] + v || v;
+    })
+
+    _.each(d.eastdev, function(v,k) {
+      eastdev[k] = eastdev[k] + v || v;
+    })
+
+    _.each(d.duration, function(v,k) {
+      duration[k] = duration[k] + v || v;
+    })
+  });
+
+  return {'name': 'All Provinces', 'opstat':opstat, 'problem':problems, 'fear':fears, 'duration':duration, 'eastdev':eastdev, 'provinces':_.allKeys(data)};
+>>>>>>> gh-pages
 }
 
 function populateSelection(data) {
   // console.log(data);
 
+<<<<<<< HEAD
   var provinceList = _.map(data.provinces, function(d) { return {text: d, value: d} });
+=======
+  var provinceList = _.map(data.provinces, function(d) { return {text: d, value: d, label: groupProvinces(d)} });
+
+  console.log(provinceList);
+>>>>>>> gh-pages
 
   // var problemList = _.map(data.problems, function(v,k) { return {text: renameProblems(k), value: k} });
 
@@ -745,6 +842,7 @@ function populateSelection(data) {
     persist: true,
     sortField: 'text',
     maxItems: '1',
+<<<<<<< HEAD
     onChange: function(prov) {
       if(selectedProvince != null || selectedProvince != '') {
         d3.select("#"+selectedProvince).style("fill", tempcolor);
@@ -792,6 +890,53 @@ function populateSelection(data) {
   //   callback(fearList);
   // });
 
+=======
+    optgroups: [
+      {$order: 2, label: 'West Indonesia', name: 'West Indonesia'},
+      {$order: 3, label: 'Central Indonesia', name: 'Central Indonesia'},
+      {$order: 4, label: 'East Indonesia', name: 'East Indonesia'},
+      {$order: 1, label: 'All Provinces', name: 'All'}],
+    optgroupField: 'label',
+    optgroupLabelField: 'name',
+    optgroupValueField: 'label',
+    lockOptgroupOrder: true,
+    onChange: function(prov) {
+      if(prov == "All Provinces") {
+
+        d3.selectAll(".provinces").style("fill", "#e6550d");
+        selectedProvince = 'all';
+        showDetails(sumProv, 'right');
+
+      } else {
+
+        if(selectedProvince = 'all') {
+          paintMap(provData);
+        } else if(selectedProvince != null || selectedProvince != '') {
+          d3.select("#"+selectedProvince).style("fill", tempcolor);
+        }
+
+        if(prov != '') {
+
+          selectedProvince = prov.replace(/ /g,'').toLowerCase(); 
+          tempcolor = d3.select("#"+selectedProvince).style("fill");
+          d3.select("#"+selectedProvince).style("fill", "#e6550d");
+          showDetails(provData[prov], decidePosition(prov));   
+        } else {
+          // d3.select("#"+selectedProvince).style("fill", colors(provData[prov].optimistic));
+          selectedProvince = null;
+          $(".overlay").hide();
+        } 
+      } 
+    }
+  });
+
+  var selectize = $("#select-province")[0].selectize;
+
+  selectize.addOption({ text: 'All Provinces', value: 'All Provinces', label: 'All Provinces' });
+  selectize.load(function(callback) {
+    callback(provinceList);
+  });
+>>>>>>> gh-pages
 }
 
 function renameProvince(name) {
@@ -866,6 +1011,20 @@ function decidePosition(province) {
   return prov.indexOf(province) > -1 ? 'left' : 'right';
 }
 
+<<<<<<< HEAD
+=======
+function groupProvinces(province) {
+  var regions = {east: ["Papua Barat", "Papua", "Maluku", "Maluku Utara"],
+                 central: ["Sulawesi Selatan", "Sulawesi Tengah", "Kalimantan Timur", "Nusa Tenggara Timur", "Bali", "Kalimantan Selatan", "Sulawesi Utara", "Gorontalo", "Nusa Tenggara Barat", "Sulawesi Tenggara", "Sulawesi Barat", "Kalimantan Utara"],
+                 west: ["Jawa Barat", "Jawa Tengah", "DKI Jakarta", "Sumatera Barat", "Lampung", "Jawa Timur", "Sumatera Utara", "Banten", "DI Yogyakarta", "Jambi", "Kalimantan Barat", "Riau", "Aceh", "Kalimantan Tengah", "Sumatera Selatan", "Kepulauan Riau", "Bangka Belitung", "Bengkulu"]} 
+
+  if(regions.east.indexOf(province) > -1) { return "East Indonesia"; }
+  else if(regions.central.indexOf(province) > -1) { return "Central Indonesia"; }
+  else if(regions.west.indexOf(province) > -1) { return "West Indonesia"; }
+  else { return "Unknown"; }
+}
+
+>>>>>>> gh-pages
 </script>
 </body>
 </html>
