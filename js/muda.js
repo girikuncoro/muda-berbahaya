@@ -31,8 +31,8 @@ var path = d3.geo.path()
   .projection(projection);
 
 queue()
-  .defer(d3.tsv, '/../data/muda.tsv')
-  .defer(d3.json, '/../data/idn.json')
+  .defer(d3.tsv, '/muda-berbahaya/data/muda.tsv')
+  .defer(d3.json, '/muda-berbahaya/data/idn.json')
   .await(init);
 
 var selectedProvince = null;
