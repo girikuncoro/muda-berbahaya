@@ -1,0 +1,41 @@
+.popover {
+  outline: none;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
+  box-radius: 1px;
+}
+
+.popover-title {
+  padding: 8px;
+  font-size: 11px;
+}
+
+.popover-content {
+  padding: 8px;
+  font-size: 11px;
+}
+
+.reduce-space {
+  margin-bottom: 4px;
+}
+
+.bar {
+  fill: #6baed6;
+}
+
+.bar:hover {
+  fill: #e6550d;
+}
+
+.arrow {
+  display:none !important;
+}
+
+.arc text {
+  font-size: 10px;
+}
+
+.small-text {
+  font-size: 8px;
+}
