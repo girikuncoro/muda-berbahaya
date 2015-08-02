@@ -44,12 +44,6 @@ var sumProv,
     idnData,
     provData = {};
 
-var aspectBar,
-    aspectPieleft,
-    aspectPieright;
-
-// var selectize;
-
 function init(error, muda, idn) {
   var provinces = d3.nest()
     .key(function(d) { return d.origin; }).sortKeys(d3.ascending)
@@ -146,6 +140,7 @@ function drawMap(data, param) {
       removePopover();
     })
     .on("click", function(d) {
+      event.stopPropagation();
       var prov = d.stat.name.replace(/ /g,'').toLowerCase();
 
       if(selectedProvince != '') d3.select("#"+selectedProvince).style("fill", colors(tempdata));
@@ -195,88 +190,31 @@ function paintMap(data) {
 }
 
 function showDetails(data, position) {
-  var pos = {};
+  removePopover();
+
+  var pos = {},
+      width = $(".indonesia").attr("width");
 
   if(position == "left") { pos.x = 0; pos.x1 = 0; }
   else if(position == "right") { pos.x = width*2/3; pos.x1 = width; }
 
   svg.datum(data);
 
-  if($(".overlay").length) {
-    svg.selectAll("rect.overlay, #detail-info").remove();
+  if($(".overlay").length) svg.selectAll("rect.overlay, #detail-info").remove();
 
-    // $("div.overlay").hide();
+  drawDetails();
 
-    svg.append("rect")
+  function drawDetails() {
+    svg.append("foreignObject")
+      .attr("id", "detail-info")
       .attr("class", "overlay")
-      .attr("width", width/3)
-      .attr("height", height)
-      // .attr("y", 15)
       .attr("x", pos.x)
-      .style("fill", "#FFF")
-     .transition().duration(300)
-      .attr("width", 0)
-      .attr("height", height)
-      // .attr("y", 15)
-      .attr("x", pos.x1)
-      .style("fill", "#FFF")
-     .transition().duration(500)
-      .attr("width", width/3)
-      .attr("height", height)
-      // .attr("y", 15)
-      .attr("x", pos.x)
-      .style("fill", "#FFF")
-      .each("end", function() {
-        // $("div.overlay").show();
-        // populateDetails(data);
-        svg.append("foreignObject")
-          .attr("id", "detail-info")
-          // .attr("class", "overlay")
-          .attr("width", width/3)
-          // .attr("height", height/2)
-          // .attr("y", 15)
-          .attr("x", pos.x)
-         .append("xhtml:div")
-          .html(function(d) { return "<div class='overlay''></div>" })
-          .style("height", "385px")
-          .style("font-size", "8px")
-          .style("overflow-y", "scroll");
+     .append("xhtml:div")
+      .html(function(d) { return "<div class='detail overlay'></div>" })
+      .style("overflow-y", "scroll");
 
-          populateDetails(data);
-          readjustDetail();
-      });
-
-  } else {
-
-    svg.append("rect")
-      .attr("class", "overlay")
-      .attr("width", 0)
-      .attr("x", pos.x1)
-      .style("fill", "#FFF")
-     .transition().duration(500)
-      .attr("width", width/3)
-      .attr("height", height)
-      // .attr("y", 15)
-      .attr("x", pos.x)
-      .style("fill", "#FFF")
-      .each("end", function() {
-        svg.append("foreignObject")
-          .attr("id", "detail-info")
-          .attr("class", "overlay")
-          .attr("width", width/3)
-          .attr("height", height)
-          // .attr("y", 15)
-          .attr("x", pos.x)
-         .append("xhtml:div")
-          .html(function(d) { return "<div class='detail overlay' style='width:" + width/3 + "px'></div>" })
-          // .style("width", width/3)
-          // .style("height", "385px")
-          .style("height", "285px")
-          .style("overflow-y", "scroll");
-
-          populateDetails(data);
-          readjustDetail();
-      });
+      populateDetails(data);
+      readjustDetail();
   }
 }
 
@@ -509,7 +447,7 @@ function showPopover(data) {
 
   $(selection).popover({
     title: province,
-    placement: 'auto right',
+    placement: function() { return decidePosition(province); },
     container: 'body',
     html: true
   });
@@ -642,6 +580,7 @@ function populateSelection(data) {
           // d3.select("#"+selectedProvince).style("fill", colors(provData[prov].optimistic));
           selectedProvince = null;
           $(".overlay").hide();
+          $("foreignObject").remove();
         }
       }
     }
@@ -740,6 +679,20 @@ function groupProvinces(province) {
 
 $(document).ready(function() {
   readjustDetail();
+  $(document).click(function() {
+    $(".overlay").hide();
+    $("foreignObject").remove();
+
+    var selectize = $("#select-province")[0].selectize;
+    selectize.clear(true);
+
+    if(selectedProvince = 'all') {
+      paintMap(provData);
+    } else {
+      d3.select("#"+selectedProvince).style("fill", tempcolor);
+    }
+    selectedProvince = null;
+  });
 })
 
 $(window).on("resize", function() {
@@ -768,9 +721,8 @@ function readjustDetail() {
     barF.attr("width", detailWidth);
     barF.attr("height", detailWidth / barAspectF);
   }
-  $("div.overlay").css("width", detailWidth - 5); // 5 for scroll space
-  // $("div.overlay").attr("height", targetHeight);
+  $("div.overlay").css("width", detailWidth); // 5 for scroll space
   $('div.overlay').parent().css("height", targetHeight);
-  $("foreignObject").attr("width", detailWidth);
+  $("foreignObject").attr("width", detailWidth + 15);
   $("foreignObject").attr("height", targetHeight);
 }
