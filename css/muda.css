@@ -39,3 +39,11 @@
 .small-text {
   font-size: 8px;
 }
+
+div.overlay {
+  background-color: #fff;
+}
+
+.popover.left {
+  right: 100px !important;
+}

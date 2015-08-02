@@ -20,8 +20,8 @@ var colors = d3.scale.linear()
       .range([ "#2171b5", "#6baed6", "#bdd7e7", "#eff3ff",  ]);
 
 var projection = d3.geo.albers()
-  .center([0, -3.175])
-  .rotate([-118.8283, 0])
+  .center([0, -1.175])
+  .rotate([-116.8283, 0])
   //.rotate([-106.8283, 0])
   .parallels([-2, 0])
   .scale(1100)
@@ -43,8 +43,6 @@ var tempcolor,
 var sumProv,
     idnData,
     provData = {};
-
-// var selectize;
 
 function init(error, muda, idn) {
   var provinces = d3.nest()
@@ -135,13 +133,14 @@ function drawMap(data, param) {
     .on("mouseover", function(d){
       d3.select(this).style("fill", "#e6550d");
       if(selectedProvince == null) showPopover.call(this,d);
-      makeBarchart(d.stat);
+      makePopbar(d.stat);
     })
     .on("mouseout", function(d){
       d3.select(this).style("fill", function(d) { return $(this).attr("id") == selectedProvince || selectedProvince == 'all' ? "#e6550d" : colors(d.stat[param]); });
       removePopover();
     })
     .on("click", function(d) {
+      d3.event.stopPropagation();
       var prov = d.stat.name.replace(/ /g,'').toLowerCase();
 
       if(selectedProvince != '') d3.select("#"+selectedProvince).style("fill", colors(tempdata));
@@ -163,21 +162,21 @@ function drawMap(data, param) {
 
   legend.append("rect")
     .attr("x", function(d,i) { return 30 * i; })
-    .attr("y", height - 80)
+    .attr("y", height - 20)
     .attr("width", 30)
     .attr("height", 10)
     .style("fill", function(d) { return colors(d); });
 
   legend.append("text")
     .attr("x", function(d,i) { return 30 * i; })
-    .attr("y", height - 60)
+    .attr("y", height)
     .text(function(d) { return d == 100 ? d + "%" : d; })
     .style("font-size", "10px")
     .style("fill", "#bdbdbd");
 
   legend.append("text")
     .attr("x", 0)
-    .attr("y", height - 85)
+    .attr("y", height - 25)
     .text("Optimistic percentage")
     .style("font-size", "10px")
     .style("fill", "#bdbdbd");
@@ -191,145 +190,41 @@ function paintMap(data) {
 }
 
 function showDetails(data, position) {
-  var pos = {};
+  removePopover();
 
-  if(position == "left") { pos.x = 0; pos.x1 = 0; }
-  else if(position == "right") { pos.x = width*2/3; pos.x1 = width; }
+  var width = $(".indonesia").attr("width");
+  console.log(width);
+
+  var offset = 0,
+      pos_x = 0;
+
+  // Solve offset issue on right for Firefox
+  if($.browser.mozilla) {
+    offset = width/4;
+  }
+
+  if(position == "right") { pos_x = width*2/3 + offset; }
+  console.log(offset);
 
   svg.datum(data);
 
-  if($(".overlay").length) {
-    svg.selectAll("rect.overlay, #detail-info").remove();
+  if($(".overlay").length) svg.selectAll("rect.overlay, #detail-info").remove();
 
-    // $("div.overlay").hide();
+  drawDetails();
 
-    svg.append("rect")
+  function drawDetails() {
+    svg.append("foreignObject")
+      .attr("id", "detail-info")
       .attr("class", "overlay")
+      .attr("x", pos_x)
       .attr("width", width/3)
-      .attr("height", height)
-      // .attr("y", 15)
-      .attr("x", pos.x)
-      .style("fill", "#FFF")
-     .transition().duration(300)
-      .attr("width", 0)
-      .attr("height", height)
-      // .attr("y", 15)
-      .attr("x", pos.x1)
-      .style("fill", "#FFF")
-     .transition().duration(500)
-      .attr("width", width/3)
-      .attr("height", height)
-      // .attr("y", 15)
-      .attr("x", pos.x)
-      .style("fill", "#FFF")
-      .each("end", function() {
-        // $("div.overlay").show();
-        // populateDetails(data);
-        svg.append("foreignObject")
-          .attr("id", "detail-info")
-          .attr("class", "overlay")
-          .attr("width", width/3)
-          .attr("height", height/2)
-          // .attr("y", 15)
-          .attr("x", pos.x)
-         .append("xhtml:div")
-          .html(function(d) { return "<div class='overlay'></div>" })
-          .style("width", width/3)
-          .style("height", "385px")
-          .style("overflow-y", "scroll");
+     .append("xhtml:div")
+      .html(function(d) { return "<div class='detail overlay'></div>" })
+      .style("overflow-y", "scroll");
 
-          populateDetails(data);
-      });
-
-  } else {
-
-    svg.append("rect")
-      .attr("class", "overlay")
-      .attr("width", 0)
-      .attr("x", pos.x1)
-      .style("fill", "#FFF")
-     .transition().duration(500)
-      .attr("width", width/3)
-      .attr("height", height)
-      // .attr("y", 15)
-      .attr("x", pos.x)
-      .style("fill", "#FFF")
-      .each("end", function() {
-        svg.append("foreignObject")
-          .attr("id", "detail-info")
-          .attr("class", "overlay")
-          .attr("width", width/3)
-          .attr("height", height/2)
-          // .attr("y", 15)
-          .attr("x", pos.x)
-         .append("xhtml:div")
-          .html(function(d) { return "<div class='overlay'></div>" })
-          .style("width", width/3)
-          .style("height", "385px")
-          .style("overflow-y", "scroll");
-
-          populateDetails(data);
-      });
+      populateDetails(data);
+      readjustDetail();
   }
-
-  // if($(".overlay").length) {
-  //   svg.selectAll("rect.overlay").remove();
-
-  //   $("div.overlay").hide();
-
-  //   svg.append("rect")
-  //     .attr("class", "overlay")
-  //     .attr("width", width/3)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width*2/3)
-  //     .style("fill", "#FFF")
-  //    .transition().duration(300)
-  //     .attr("width", 0)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width)
-  //     .style("fill", "#FFF")
-  //    .transition().duration(500)
-  //     .attr("width", width/3)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width*2/3)
-  //     .style("fill", "#FFF")
-  //     .each("end", function() {
-  //       $("div.overlay").show();
-  //       populateDetails(data);
-  //     });
-
-  // } else {
-
-  //   svg.append("rect")
-  //     .attr("class", "overlay")
-  //     .attr("width", 0)
-  //     .attr("x", width)
-  //     .style("fill", "#FFF")
-  //    .transition().duration(500)
-  //     .attr("width", width/3)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width*2/3)
-  //     .style("fill", "#FFF")
-  //     .each("end", function() {
-  //       svg.append("foreignObject")
-  //         .attr("class", "overlay")
-  //         .attr("width", width/3)
-  //         .attr("height", height/2)
-  //         // .attr("y", 15)
-  //         .attr("x", width*2/3)
-  //        .append("xhtml:div")
-  //         .html(function(d) { return "<div class='overlay'></div>" })
-  //         .style("width", width/3)
-  //         .style("height", "385px")
-  //         .style("overflow-y", "scroll");
-
-  //         populateDetails(data);
-  //     });
-  // }
 }
 
 function populateDetails(data) {
@@ -390,6 +285,9 @@ function drawDetailPieRight(data) {
   var svg1 = d3.select("div.detail-pie").append("svg")
     .attr("width", w)
     .attr("height", h)
+    .attr("class", "detail pie right")
+    .attr("viewBox", "0 0 100 150")
+    .attr("preserveAspectRatio", "xMinYMid meet")
    .append("g")
     .attr("transform", "translate(" + w/2 + "," + h/2.5 + ")");
 
@@ -455,6 +353,9 @@ function drawDetailPieLeft(data) {
   var svg = d3.select("div.detail-pie").append("svg")
     .attr("width", w)
     .attr("height", h)
+    .attr("class", "detail pie left")
+    .attr("viewBox", "0 0 100 150")
+    .attr("preserveAspectRatio", "xMinYMid meet")
    .append("g")
     .attr("transform", "translate(" + w/2 + "," + h/2.5 + ")");
 
@@ -499,6 +400,7 @@ function drawDetailBar(data, classname) {
   var w = width/5,
       m = { left: 90, right: 30 },
       barH = 20,
+      h = barH * data.length,
       offset = 10;
 
   var x = d3.scale.linear()
@@ -507,7 +409,10 @@ function drawDetailBar(data, classname) {
 
   var svg = d3.select("div.detail-bar."+classname).append("svg")
     .attr("width", w + m.left + m.right)
-    .attr("height", barH * data.length)
+    .attr("height", h)
+    .attr("class", function() { return "detail bar " + classname; })
+    .attr("viewBox", function() { return "0 0 " + w + " " + h; })
+    .attr("preserveAspectRatio", "xMinYMin meet")
    .append("g")
     .attr("transform", "translate(" + m.left + ",0)");
 
@@ -551,7 +456,7 @@ function showPopover(data) {
 
   $(selection).popover({
     title: province,
-    placement: 'auto right',
+    placement: function() { return decidePosition(province); },
     container: 'body',
     html: true
   });
@@ -565,7 +470,7 @@ function removePopover() {
   })
 }
 
-function makeBarchart(data) {
+function makePopbar(data) {
   var stat = [{key:"Optimistic", value:data.optimistic},
               {key:"Pessimistic", value:data.pessimistic}];
 
@@ -684,6 +589,7 @@ function populateSelection(data) {
           // d3.select("#"+selectedProvince).style("fill", colors(provData[prov].optimistic));
           selectedProvince = null;
           $(".overlay").hide();
+          $("foreignObject").remove();
         }
       }
     }
@@ -780,17 +686,66 @@ function groupProvinces(province) {
   else { return "Unknown"; }
 }
 
-var graph = $(".indonesia"),
-    aspect = width/height;
-
 $(document).ready(function() {
-  var targetWidth = graph.parent().width();
-  graph.attr("width", targetWidth);
-  graph.attr("height", targetWidth / aspect);
+  readjustDetail();
+  $(document).click(function() {
+    $(".overlay").hide();
+    $("foreignObject").remove();
+
+    var selectize = $("#select-province")[0].selectize;
+    selectize.clear(true);
+
+    if(selectedProvince = 'all') {
+      paintMap(provData);
+    } else {
+      d3.select("#"+selectedProvince).style("fill", tempcolor);
+    }
+    selectedProvince = null;
+  });
+
 })
 
 $(window).on("resize", function() {
-  var targetWidth = graph.parent().width();
-  graph.attr("width", targetWidth);
-  graph.attr("height", targetWidth / aspect);
+  readjustDetail();
 });
+
+function readjustDetail() {
+  var graph = $(".indonesia"),
+      aspect = width/height;
+
+  var targetWidth = graph.parent().width(),
+      targetHeight = targetWidth / aspect,
+      detailWidth = targetWidth / 3;
+
+  var offset = 0,
+      offsetW = 0;
+
+  graph.attr("width", targetWidth);
+  graph.attr("height", targetHeight);
+
+  if($(".detail.bar").length) {
+    var barP = $(".detail.bar.problem"),
+        barF = $(".detail.bar.fear"),
+        barAspectP = barP.attr("width") / barP.attr("height"),
+        barAspectF = barF.attr("width") / barF.attr("height");
+
+  // Solve offset issue on Firefox
+  if($.browser.mozilla) {
+    offset = 90;
+    offsetW = 50;
+  }
+
+    barP.attr("width", detailWidth);
+    barP.attr("height", detailWidth / barAspectP);
+    barF.attr("width", detailWidth);
+    barF.attr("height", detailWidth / barAspectF);
+  }
+
+
+
+  $("div.overlay").css("width", detailWidth + offsetW); // 5 for scroll space
+  $('div.overlay').parent().css("height", targetHeight + offset);
+  $("foreignObject").attr("width", detailWidth + 15 + offsetW);
+  $("foreignObject").attr("height", targetHeight + offset);
+
+}
