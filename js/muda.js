@@ -140,7 +140,7 @@ function drawMap(data, param) {
       removePopover();
     })
     .on("click", function(d) {
-      event.stopPropagation();
+      d3.event.stopPropagation();
       var prov = d.stat.name.replace(/ /g,'').toLowerCase();
 
       if(selectedProvince != '') d3.select("#"+selectedProvince).style("fill", colors(tempdata));
@@ -192,11 +192,19 @@ function paintMap(data) {
 function showDetails(data, position) {
   removePopover();
 
-  var pos = {},
-      width = $(".indonesia").attr("width");
+  var width = $(".indonesia").attr("width");
+  console.log(width);
 
-  if(position == "left") { pos.x = 0; pos.x1 = 0; }
-  else if(position == "right") { pos.x = width*2/3; pos.x1 = width; }
+  var offset = 0,
+      pos_x = 0;
+
+  // Solve offset issue on right for Firefox
+  if($.browser.mozilla) {
+    offset = width/4;
+  }
+
+  if(position == "right") { pos_x = width*2/3 + offset; }
+  console.log(offset);
 
   svg.datum(data);
 
@@ -208,7 +216,8 @@ function showDetails(data, position) {
     svg.append("foreignObject")
       .attr("id", "detail-info")
       .attr("class", "overlay")
-      .attr("x", pos.x)
+      .attr("x", pos_x)
+      .attr("width", width/3)
      .append("xhtml:div")
       .html(function(d) { return "<div class='detail overlay'></div>" })
       .style("overflow-y", "scroll");
@@ -693,6 +702,7 @@ $(document).ready(function() {
     }
     selectedProvince = null;
   });
+
 })
 
 $(window).on("resize", function() {
@@ -707,6 +717,9 @@ function readjustDetail() {
       targetHeight = targetWidth / aspect,
       detailWidth = targetWidth / 3;
 
+  var offset = 0,
+      offsetW = 0;
+
   graph.attr("width", targetWidth);
   graph.attr("height", targetHeight);
 
@@ -716,13 +729,23 @@ function readjustDetail() {
         barAspectP = barP.attr("width") / barP.attr("height"),
         barAspectF = barF.attr("width") / barF.attr("height");
 
+  // Solve offset issue on Firefox
+  if($.browser.mozilla) {
+    offset = 90;
+    offsetW = 50;
+  }
+
     barP.attr("width", detailWidth);
     barP.attr("height", detailWidth / barAspectP);
     barF.attr("width", detailWidth);
     barF.attr("height", detailWidth / barAspectF);
   }
-  $("div.overlay").css("width", detailWidth); // 5 for scroll space
-  $('div.overlay').parent().css("height", targetHeight);
-  $("foreignObject").attr("width", detailWidth + 15);
-  $("foreignObject").attr("height", targetHeight);
+
+
+
+  $("div.overlay").css("width", detailWidth + offsetW); // 5 for scroll space
+  $('div.overlay').parent().css("height", targetHeight + offset);
+  $("foreignObject").attr("width", detailWidth + 15 + offsetW);
+  $("foreignObject").attr("height", targetHeight + offset);
+
 }
