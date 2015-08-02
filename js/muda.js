@@ -20,8 +20,8 @@ var colors = d3.scale.linear()
       .range([ "#2171b5", "#6baed6", "#bdd7e7", "#eff3ff",  ]);
 
 var projection = d3.geo.albers()
-  .center([0, -3.175])
-  .rotate([-118.8283, 0])
+  .center([0, -1.175])
+  .rotate([-116.8283, 0])
   //.rotate([-106.8283, 0])
   .parallels([-2, 0])
   .scale(1100)
@@ -31,8 +31,8 @@ var path = d3.geo.path()
   .projection(projection);
 
 queue()
-  .defer(d3.tsv, '/muda-berbahaya/data/muda.tsv')
-  .defer(d3.json, '/muda-berbahaya/data/idn.json')
+  .defer(d3.tsv, '../data/muda.tsv')
+  .defer(d3.json, '../data/idn.json')
   .await(init);
 
 var selectedProvince = null;
@@ -43,6 +43,10 @@ var tempcolor,
 var sumProv,
     idnData,
     provData = {};
+
+var aspectBar,
+    aspectPieleft,
+    aspectPieright;
 
 // var selectize;
 
@@ -135,7 +139,7 @@ function drawMap(data, param) {
     .on("mouseover", function(d){
       d3.select(this).style("fill", "#e6550d");
       if(selectedProvince == null) showPopover.call(this,d);
-      makeBarchart(d.stat);
+      makePopbar(d.stat);
     })
     .on("mouseout", function(d){
       d3.select(this).style("fill", function(d) { return $(this).attr("id") == selectedProvince || selectedProvince == 'all' ? "#e6550d" : colors(d.stat[param]); });
@@ -163,21 +167,21 @@ function drawMap(data, param) {
 
   legend.append("rect")
     .attr("x", function(d,i) { return 30 * i; })
-    .attr("y", height - 80)
+    .attr("y", height - 20)
     .attr("width", 30)
     .attr("height", 10)
     .style("fill", function(d) { return colors(d); });
 
   legend.append("text")
     .attr("x", function(d,i) { return 30 * i; })
-    .attr("y", height - 60)
+    .attr("y", height)
     .text(function(d) { return d == 100 ? d + "%" : d; })
     .style("font-size", "10px")
     .style("fill", "#bdbdbd");
 
   legend.append("text")
     .attr("x", 0)
-    .attr("y", height - 85)
+    .attr("y", height - 25)
     .text("Optimistic percentage")
     .style("font-size", "10px")
     .style("fill", "#bdbdbd");
@@ -227,18 +231,19 @@ function showDetails(data, position) {
         // populateDetails(data);
         svg.append("foreignObject")
           .attr("id", "detail-info")
-          .attr("class", "overlay")
+          // .attr("class", "overlay")
           .attr("width", width/3)
-          .attr("height", height/2)
+          // .attr("height", height/2)
           // .attr("y", 15)
           .attr("x", pos.x)
          .append("xhtml:div")
-          .html(function(d) { return "<div class='overlay'></div>" })
-          .style("width", width/3)
+          .html(function(d) { return "<div class='overlay''></div>" })
           .style("height", "385px")
+          .style("font-size", "8px")
           .style("overflow-y", "scroll");
 
           populateDetails(data);
+          readjustDetail();
       });
 
   } else {
@@ -259,77 +264,20 @@ function showDetails(data, position) {
           .attr("id", "detail-info")
           .attr("class", "overlay")
           .attr("width", width/3)
-          .attr("height", height/2)
+          .attr("height", height)
           // .attr("y", 15)
           .attr("x", pos.x)
          .append("xhtml:div")
-          .html(function(d) { return "<div class='overlay'></div>" })
-          .style("width", width/3)
-          .style("height", "385px")
+          .html(function(d) { return "<div class='detail overlay' style='width:" + width/3 + "px'></div>" })
+          // .style("width", width/3)
+          // .style("height", "385px")
+          .style("height", "285px")
           .style("overflow-y", "scroll");
 
           populateDetails(data);
+          readjustDetail();
       });
   }
-
-  // if($(".overlay").length) {
-  //   svg.selectAll("rect.overlay").remove();
-
-  //   $("div.overlay").hide();
-
-  //   svg.append("rect")
-  //     .attr("class", "overlay")
-  //     .attr("width", width/3)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width*2/3)
-  //     .style("fill", "#FFF")
-  //    .transition().duration(300)
-  //     .attr("width", 0)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width)
-  //     .style("fill", "#FFF")
-  //    .transition().duration(500)
-  //     .attr("width", width/3)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width*2/3)
-  //     .style("fill", "#FFF")
-  //     .each("end", function() {
-  //       $("div.overlay").show();
-  //       populateDetails(data);
-  //     });
-
-  // } else {
-
-  //   svg.append("rect")
-  //     .attr("class", "overlay")
-  //     .attr("width", 0)
-  //     .attr("x", width)
-  //     .style("fill", "#FFF")
-  //    .transition().duration(500)
-  //     .attr("width", width/3)
-  //     .attr("height", height)
-  //     // .attr("y", 15)
-  //     .attr("x", width*2/3)
-  //     .style("fill", "#FFF")
-  //     .each("end", function() {
-  //       svg.append("foreignObject")
-  //         .attr("class", "overlay")
-  //         .attr("width", width/3)
-  //         .attr("height", height/2)
-  //         // .attr("y", 15)
-  //         .attr("x", width*2/3)
-  //        .append("xhtml:div")
-  //         .html(function(d) { return "<div class='overlay'></div>" })
-  //         .style("width", width/3)
-  //         .style("height", "385px")
-  //         .style("overflow-y", "scroll");
-
-  //         populateDetails(data);
-  //     });
-  // }
 }
 
 function populateDetails(data) {
@@ -390,6 +338,9 @@ function drawDetailPieRight(data) {
   var svg1 = d3.select("div.detail-pie").append("svg")
     .attr("width", w)
     .attr("height", h)
+    .attr("class", "detail pie right")
+    .attr("viewBox", "0 0 100 150")
+    .attr("preserveAspectRatio", "xMinYMid meet")
    .append("g")
     .attr("transform", "translate(" + w/2 + "," + h/2.5 + ")");
 
@@ -455,6 +406,9 @@ function drawDetailPieLeft(data) {
   var svg = d3.select("div.detail-pie").append("svg")
     .attr("width", w)
     .attr("height", h)
+    .attr("class", "detail pie left")
+    .attr("viewBox", "0 0 100 150")
+    .attr("preserveAspectRatio", "xMinYMid meet")
    .append("g")
     .attr("transform", "translate(" + w/2 + "," + h/2.5 + ")");
 
@@ -499,6 +453,7 @@ function drawDetailBar(data, classname) {
   var w = width/5,
       m = { left: 90, right: 30 },
       barH = 20,
+      h = barH * data.length,
       offset = 10;
 
   var x = d3.scale.linear()
@@ -507,7 +462,10 @@ function drawDetailBar(data, classname) {
 
   var svg = d3.select("div.detail-bar."+classname).append("svg")
     .attr("width", w + m.left + m.right)
-    .attr("height", barH * data.length)
+    .attr("height", h)
+    .attr("class", function() { return "detail bar " + classname; })
+    .attr("viewBox", function() { return "0 0 " + w + " " + h; })
+    .attr("preserveAspectRatio", "xMinYMin meet")
    .append("g")
     .attr("transform", "translate(" + m.left + ",0)");
 
@@ -565,7 +523,7 @@ function removePopover() {
   })
 }
 
-function makeBarchart(data) {
+function makePopbar(data) {
   var stat = [{key:"Optimistic", value:data.optimistic},
               {key:"Pessimistic", value:data.pessimistic}];
 
@@ -780,17 +738,39 @@ function groupProvinces(province) {
   else { return "Unknown"; }
 }
 
-var graph = $(".indonesia"),
-    aspect = width/height;
-
 $(document).ready(function() {
-  var targetWidth = graph.parent().width();
-  graph.attr("width", targetWidth);
-  graph.attr("height", targetWidth / aspect);
+  readjustDetail();
 })
 
 $(window).on("resize", function() {
-  var targetWidth = graph.parent().width();
-  graph.attr("width", targetWidth);
-  graph.attr("height", targetWidth / aspect);
+  readjustDetail();
 });
+
+function readjustDetail() {
+  var graph = $(".indonesia"),
+      aspect = width/height;
+
+  var targetWidth = graph.parent().width(),
+      targetHeight = targetWidth / aspect,
+      detailWidth = targetWidth / 3;
+
+  graph.attr("width", targetWidth);
+  graph.attr("height", targetHeight);
+
+  if($(".detail.bar").length) {
+    var barP = $(".detail.bar.problem"),
+        barF = $(".detail.bar.fear"),
+        barAspectP = barP.attr("width") / barP.attr("height"),
+        barAspectF = barF.attr("width") / barF.attr("height");
+
+    barP.attr("width", detailWidth);
+    barP.attr("height", detailWidth / barAspectP);
+    barF.attr("width", detailWidth);
+    barF.attr("height", detailWidth / barAspectF);
+  }
+  $("div.overlay").css("width", detailWidth - 5); // 5 for scroll space
+  // $("div.overlay").attr("height", targetHeight);
+  $('div.overlay').parent().css("height", targetHeight);
+  $("foreignObject").attr("width", detailWidth);
+  $("foreignObject").attr("height", targetHeight);
+}
