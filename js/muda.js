@@ -234,7 +234,7 @@ function showDetails(data, position) {
 
   // Solve offset issue on right for Firefox
   if($.browser.mozilla) {
-    offset = width/4.2;
+    offset = width/6;
   }
 
   if(position == "right") { pos_x = width*2/3 + offset; }
