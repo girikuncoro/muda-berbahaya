@@ -17,7 +17,9 @@ var colors = d3.scale.linear()
     colorPie = d3.scale.ordinal()
       .range(["#3182bd", "#9ecae1"]),
     colorDuration = d3.scale.ordinal()
-      .range([ "#2171b5", "#6baed6", "#bdd7e7", "#eff3ff",  ]);
+      .range(["#2171b5", "#6baed6", "#bdd7e7", "#eff3ff"]),
+    colorContribute = d3.scale.ordinal()
+      .range(["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"]);
 
 var projection = d3.geo.albers()
   .center([0, -1.175])
@@ -62,15 +64,27 @@ function init(error, muda, idn) {
       return p.duration;
     });
 
+    var background = _.countBy(province, function(p) {
+      return p.background;
+    });
+
+    var contribution = _.countBy(province, function(p) {
+      return p.contribution;
+    });
+
     var optimistic = { "Yes":0, "Maybe":0, "No":0 },
         eastdev = { "Yes":0, "No":0 },
         duration = { "< 2":0, "2-5":0, "5-7":0, "> 7":0 },
         fears = {},
-        problems = {};
+        problems = {},
+        background = {},
+        contribution = {};
 
     _.each(province, function(d) {
       d.fear = d.fear.replace(/ /g,'').toLowerCase().split(",");
       d.problem = d.problem.replace(/ /g,'').toLowerCase().split(",");
+      d.contribution = d.contribution.replace(/ /g,'').toLowerCase().split(",");
+      d.background = d.background.replace(/ /g,'').toLowerCase().split(",");
 
       d.fear.forEach(function(e) {
         if(e != "") fears[e] = fears[e] + 1 || 1;
@@ -80,10 +94,17 @@ function init(error, muda, idn) {
         if(e != "") problems[e] = problems[e] + 1 || 1;
       });
 
-      optimistic[d.optimistic] = optimistic[d.optimistic] + 1;
-      eastdev[d.eastdev] = eastdev[d.eastdev] + 1;
-      if(d.duration != "") duration[d.duration] = duration[d.duration] + 1;
+      d.contribution.forEach(function(e) {
+        if(e != "") contribution[e] = contribution[e] + 1 || 1;
+      });
 
+      d.background.forEach(function(e) {
+        if(e != "") background[e] = background[e] + 1 || 1;
+      });
+
+      optimistic[d.optimistic] = optimistic[d.optimistic] + 1 || 1;
+      eastdev[d.eastdev] = eastdev[d.eastdev] + 1 || 1;
+      if(d.duration != "") duration[d.duration] = duration[d.duration] + 1;
     });
 
     var total = optimistic["Yes"] + optimistic["Maybe"] + optimistic["No"];
@@ -92,7 +113,7 @@ function init(error, muda, idn) {
 
     var optimisticNo = 100 - optimisticYes;
 
-    provData[keys] = {'name':keys, 'opstat': optimistic, 'optimistic': optimisticYes, 'pessimistic': optimisticNo, 'eastdev': eastdev, 'duration': duration, 'fear': fears, 'problem': problems };
+    provData[keys] = {'name':keys, 'opstat': optimistic, 'optimistic': optimisticYes, 'pessimistic': optimisticNo, 'eastdev': eastdev, 'duration': duration, 'fear': fears, 'problem': problems, 'contribution': contribution, 'background': background };
 
     provData[keys].opstat['Total'] = total;
   });
@@ -108,6 +129,8 @@ function init(error, muda, idn) {
   });
 
   maps = _.filter(maps, function(d) { return d.properties.name != null; });
+
+  console.log(provData);
 
   drawMap(maps, 'optimistic');
 
@@ -245,7 +268,15 @@ function populateDetails(data) {
   "<p class='text-right small-text'>(Note: One person can choose multiple)</p></div><hr>" +
 
   "<div style='padding-right:10px'><h4 class='text-left'>If you can overcome all obstacles, are you interested in contributing to development in East Indonesia?</h4>" +
-  "<div class='detail-pie'></div>";
+  "<div class='detail-pie'></div><hr>" +
+
+  "<div style='padding-right:10px'><h4 class='text-left'>What is your background?</h4>" +
+  "<div class='detail-background'></div>" +
+  "<p class='text-right small-text'>(Note: Bigger fonts indicate more percentage)</p></div><hr>" +
+
+  "<div style='padding-right:10px'><h4 class='text-left'>How do you want to contribute as?</h4>" +
+  "<div class='detail-contribute'></div>" +
+  "<p class='text-right small-text'>(Note: Hover to see percentage)</p></div>";
 
   $("div.overlay").empty();
   $("div.overlay").append(detail);
@@ -259,7 +290,11 @@ function populateDetails(data) {
   var fears = _.map(data.fear, function(v,k) { return {key:k, value:v} });
   // fears = _.filter(fears, function(d) { return d.key != 'believe'; })
 
-  // console.log(fears);
+  // var contribute = _.map(data.)
+  var contribution = _.map(data.contribution, function(v,k) { return {key:k, value:v} });
+
+  var background = _.map(data.background, function(v,k) { return {key:k, value:v} });
+
   drawDetailPieLeft(rural);
 
   drawDetailPieRight(duration);
@@ -267,6 +302,10 @@ function populateDetails(data) {
   drawDetailBar(problems, 'problem');
 
   drawDetailBar(fears, 'fear');
+
+  initCloud(background);
+
+  drawDetailPieContribute(contribution);
 }
 
 function drawDetailPieRight(data) {
@@ -305,7 +344,7 @@ function drawDetailPieRight(data) {
     .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")" })
     .attr("dy", ".35em")
     .style("text-anchor", "middle")
-    .text(function(d) { if(d.data.value != 0) return d.data.key; });
+    .text(function(d) { if(d.data.key != "undefined" && d.data.value != 0) return d.data.key; });
 
   g1.append("text")
     .attr("dy", ".35em")
@@ -394,6 +433,72 @@ function drawDetailPieLeft(data) {
     .text("East Indonesia?");
 }
 
+function drawDetailPieContribute(data) {
+  var total = d3.sum(data, function(d) { return d.value; });
+
+  var w = width/3,
+      h = 180,
+      r = Math.min(w,h) / 2;
+
+  var arc = d3.svg.arc()
+    .outerRadius(r - 25)
+    .innerRadius(r - 45);
+
+  var pie = d3.layout.pie()
+    .sort(null)
+    .value(function(d) { return d.value; });
+
+  var svg = d3.select("div.detail-contribute").append("svg")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("class", "detail contribute")
+    .attr("viewBox", "0 0 " + w + " " + h)
+    .attr("preserveAspectRatio", "xMidYMax meet")
+   .append("g")
+    .attr("transform", "translate(" + w/2 + "," + h/2 + ")");
+
+  var g = svg.selectAll(".arc")
+    .data(pie(data))
+   .enter().append("g")
+    .attr("class", "arc");
+
+  g.append("path")
+    .attr("d", arc)
+    .attr("class", "donut")
+    .style("fill", function(d) { return colorContribute(d.data.key) })
+    .on("mouseover", function(d) {
+      d3.select(this).style("fill", "#e6550d");
+      d3.select(".contribute.title").text(function() {return (d.data.value / total * 100).toFixed(0) + "%"; });
+    })
+    .on("mouseout", function(d) {
+      d3.select(this).style("fill", function(d) { return colorContribute(d.data.key) });
+      d3.select(".contribute.title").text("");
+    });
+
+  g.append("text")
+    // .attr("transform", function(d) { console.log(arc.centroid(d)); return "translate(" + arc.centroid(d) + ")" })
+    .attr("transform", function(d) {
+      var c = arc.centroid(d),
+          x = c[0],
+          y = c[1],
+          h = Math.sqrt(x*x + y*y);
+      return "translate(" + (x/h * 67) + "," + (y/h * 67) + ")"
+    })
+    .attr("dy", function(d) { return d.data.key == "activist" ? "-1.05em" : ".35em" })
+    .attr("dx", function(d) { return d.data.key == "activist" ? "2em" : null })
+    // .style("text-anchor", "middle")
+    .attr("text-anchor", function(d) {
+      return (d.endAngle + d.startAngle)/2 > Math.PI ? "end" : "start";
+    })
+    .text(function(d) { if(d.data.value != 0) { return renameContribute(d.data.key); }});
+
+  g.append("text")
+    .attr("dy", ".35em")
+    .attr("class", "contribute title")
+    .style("text-anchor", "middle")
+    .style("font-size", "20px");
+}
+
 function drawDetailBar(data, classname) {
   data = _.sortBy(data, 'value').reverse();
 
@@ -447,6 +552,54 @@ function drawDetailBar(data, classname) {
     .style("font-size", "10px")
     .text(function(d) { return d.value; })
     .style("fill", function(d) { return x(d.value) < 10 ? "#000" : "#FFF"; } );
+}
+
+function initCloud(wordList) {
+  var fill = d3.scale.category10();
+
+  var max = d3.max(wordList, function(d) { return d.value; })
+
+  var w = 300,
+      h = 400;
+
+  var layout = d3.layout.cloud()
+    .size([w,h])
+    .words(wordList.map(function(d) {
+      return {text:renameBackground(d.key), size: 13 + d.value/max * 40};
+    }))
+    .padding(2)
+    .rotate(function() { return (~~(Math.random() * 6) - 3) * 30; })
+    .font("Impact")
+    .fontSize(function(d) { return d.size; })
+    .on("end", drawCloud);
+
+  layout.start();
+}
+
+function drawCloud(words) {
+  var w = 300,
+      h = 400;
+
+  d3.select("div.detail-background").append("svg")
+    .attr("width", w)
+    .attr("height", h)
+   .append("g")
+    .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")")
+   .selectAll("text")
+    .data(words)
+   .enter().append("text")
+    .style("font-size", function(d) { return d.size + "px"; })
+    .style("font-family", "Impact")
+    .style("opacity", .3)
+    .style("fill", function(d,i) { return fill(i); })
+    .style("opacity", .3)
+    .attr("text-anchor", "middle")
+    .attr("transform", function(d) {
+      return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+    })
+    .text(function(d) { return d.text; })
+    .on("mouseover", function() { d3.select(this).style("opacity", 1) })
+    .on("mouseout", function() { d3.select(this).style("opacity", .3) });
 }
 
 function showPopover(data) {
@@ -520,7 +673,9 @@ function sumProvince(data) {
       fears = {},
       opstat = {},
       eastdev = {},
-      duration = {};
+      duration = {},
+      contribution = {},
+      background = {};
 
   _.each(data, function(d) {
     _.each(d.problem, function(v,k) {
@@ -542,9 +697,17 @@ function sumProvince(data) {
     _.each(d.duration, function(v,k) {
       duration[k] = duration[k] + v || v;
     })
+
+    _.each(d.contribution, function(v,k) {
+      contribution[k] = contribution[k] + v || v;
+    })
+
+    _.each(d.background, function(v,k) {
+      background[k] = background[k] + v || v;
+    })
   });
 
-  return {'name': 'All Provinces', 'opstat':opstat, 'problem':problems, 'fear':fears, 'duration':duration, 'eastdev':eastdev, 'provinces':_.allKeys(data)};
+  return {'name': 'All Provinces', 'opstat':opstat, 'problem':problems, 'fear':fears, 'duration':duration, 'eastdev':eastdev, 'provinces':_.allKeys(data), 'background': background, 'contribution': contribution};
 }
 
 function populateSelection(data) {
@@ -666,7 +829,46 @@ function renameFears(fear) {
       fear = 'Be Realistic';
       break;
   }
-  return fear.substr(0,1).toUpperCase() + fear.substr(1);;
+  return fear.substr(0,1).toUpperCase() + fear.substr(1);
+}
+
+function renameContribute(contribution) {
+  switch(contribution) {
+    case 'professor':
+      contribution = 'Academist';
+      break;
+    case 'activist':
+      contribution = 'Social activist';
+      break;
+    case 'birokrat':
+      contribution = 'Government';
+      break;
+  }
+  return contribution.substr(0,1).toUpperCase() + contribution.substr(1);
+}
+
+function renameBackground(background) {
+  switch(background) {
+    case 'sisteminformasi/komputer':
+      background = 'informatika';
+      break;
+    case 'seni/desain/media':
+      background = 'seni rupa';
+      break;
+    case 'humansocietyiora':
+      background = 'human society';
+      break;
+    case 'senidanbudaya':
+      background = 'seni&budaya';
+      break;
+    case 'ilmusosialdanpolitik':
+      background = 'sosial&politik';
+      break;
+    case 'hubunganinternasional':
+      background = 'hub.internasional';
+      break;
+  }
+  return background;
 }
 
 function decidePosition(province) {
@@ -740,8 +942,6 @@ function readjustDetail() {
     barF.attr("width", detailWidth);
     barF.attr("height", detailWidth / barAspectF);
   }
-
-
 
   $("div.overlay").css("width", detailWidth + offsetW); // 5 for scroll space
   $('div.overlay').parent().css("height", targetHeight + offset);
