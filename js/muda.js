@@ -203,6 +203,17 @@ function drawMap(data, param) {
     .text("Optimistic percentage")
     .style("font-size", "10px")
     .style("fill", "#bdbdbd");
+
+  var giri = svg.append("text")
+    .attr("x", width)
+    .attr("y", height)
+    .attr("dy", "-.35em")
+    .style("text-anchor", "end")
+    .style("font-size", 10)
+    .text("Made in New York by @girikuncoro")
+    .on("mouseover", function(){ d3.select(this).style("text-decoration", "underline").style("cursor", "pointer"); })
+    .on("mouseout", function(){ d3.select(this).style("text-decoration", "none"); })
+    .on("click", function(){ window.open("http://twitter.com/girikuncoro") });
 }
 
 function paintMap(data) {
@@ -559,8 +570,8 @@ function initCloud(wordList) {
 
   var max = d3.max(wordList, function(d) { return d.value; })
 
-  var w = 300,
-      h = 400;
+  var w = 200,
+      h = 300;
 
   var layout = d3.layout.cloud()
     .size([w,h])
@@ -577,14 +588,14 @@ function initCloud(wordList) {
 }
 
 function drawCloud(words) {
-  var w = 300,
-      h = 400;
+  var w = 200,
+      h = 300;
 
   d3.select("div.detail-background").append("svg")
     .attr("width", w)
     .attr("height", h)
     .attr("class", "cloud background")
-    .attr("viewBox", "0 0 400 300")
+    .attr("viewBox", "0 0 200 300")
     .attr("preserveAspectRatio", "xMinYMin meet")
    .append("g")
     .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")")
@@ -958,6 +969,20 @@ function readjustDetail() {
 
     background.attr("width", detailWidth);
     background.attr("height", detailWidth / aspect);
+  }
+
+  if($(".detail.contribute").length) {
+    var contribute = $(".detail.contribute"),
+        aspect = contribute.attr("width") / contribute.attr("height");
+
+    // Solve offset issue on Firefox
+    if($.browser.mozilla) {
+      offset = 90;
+      offsetW = 50;
+    }
+
+    contribute.attr("width", detailWidth);
+    contribute.attr("height", detailWidth / aspect);
   }
 
   $("div.overlay").css("width", detailWidth + offsetW); // 5 for scroll space
